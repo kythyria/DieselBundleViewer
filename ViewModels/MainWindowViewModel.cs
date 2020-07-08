@@ -547,7 +547,7 @@ namespace DieselBundleViewer.ViewModels
 
             var path = sad.FileName;
 
-            var progress = new Progress<HashlistExtractor.ProgressRecord>();
+            var progress = new Progress<HashlistGenerator.ProgressRecord>();
             var ct = new CancellationTokenSource();
 
             var pms = new DialogParameters();
@@ -563,9 +563,9 @@ namespace DieselBundleViewer.ViewModels
                     await Task.Delay(100);
                     try
                     {
-                        var result = await new HashlistExtractor().Extract(FileEntries.Values, progress, ct.Token);
+                        var result = await new HashlistGenerator().Extract(FileEntries.Values, progress, ct.Token);
                         using var tw = new StreamWriter(path, false, new System.Text.UTF8Encoding());
-                        ((IProgress<HashlistExtractor.ProgressRecord>)progress).Report(new HashlistExtractor.ProgressRecord("Saving", 0, 0));
+                        ((IProgress<HashlistGenerator.ProgressRecord>)progress).Report(new HashlistGenerator.ProgressRecord("Saving", 0, 0));
                         foreach (var i in result)
                         {
                             tw.WriteLine(i);

@@ -10,12 +10,10 @@ using System.Xml.XPath;
 using DieselBundleViewer.Models;
 using DieselEngineFormats.Bundle;
 using DieselEngineFormats.ScriptData;
-using Microsoft.Scripting.Metadata;
-using SHA256 = System.Security.Cryptography.SHA256;
 
 namespace DieselBundleViewer.Services
 {
-    class HashlistExtractor
+    class HashlistGenerator
     {
         public class ProgressRecord
         {
@@ -139,7 +137,7 @@ namespace DieselBundleViewer.Services
 
         public Task<IEnumerable<string>> Extract(IEnumerable<FileEntry> files, IProgress<ProgressRecord> progress, CancellationToken ct)
         {
-            return HashlistExtractor.DoExtract(files, progress, ct);
+            return HashlistGenerator.DoExtract(files, progress, ct);
         }
 
         delegate IEnumerable<string> ByteProcessor(FileEntry fe, PackageFileEntry pfe, byte[] data);
@@ -190,9 +188,9 @@ namespace DieselBundleViewer.Services
             { "effect", ProcessXpath("//@texture | //@material_config | //@model | //@object | //@effect") },
             { "continent", ProcessScriptData(ProcessContinent) },
             { "sequence_manager", ProcessScriptData(ProcessSequenceManager) },
-            { "world", ProcessScriptData(ProcessWorld) }/*,
-            { "environment", ProcessEnvironment },
-            { "dialog_index", ProcessDialogIndex }*/
+            { "world", ProcessScriptData(ProcessWorld) },
+            { "environment", ProcessScriptData(ProcessEnvironment) },
+            { "dialog_index", ProcessScriptData(ProcessDialogIndex) }
         };
 
         static readonly ImmutableArray<string> InstanceFilenames = ImmutableArray.CreateRange(new string[] {
@@ -230,9 +228,26 @@ namespace DieselBundleViewer.Services
         private static IEnumerable<string> ProcessWorld(FileEntry fe, PackageFileEntry pfe, Dictionary<string, object> root)
         {
             var env = root.EntryTable("environment");
-            return Enumerable.Concat(
+            return ScriptDataQuery.Concat(
                 env.EntryTable("environment_areas").TableChildren().Entry<string>("environment"),
-                env.EntryTable("environment_values").Entry<string>("environment"));
+                env.EntryTable("environment_values").Entry<string>("environment"),
+                env.EntryTable("effects").TableChildren().Entry<string>("name"));
+        }
+
+        static readonly ImmutableArray<string> EnvironmentKeys = ImmutableArray.CreateRange(new string[] {
+            "global_world_overlay_texture", "global_texture", "global_world_overlay_mask_texture", "underlay"
+        });
+        private static IEnumerable<string> ProcessEnvironment(FileEntry fe, PackageFileEntry pfe, Dictionary<string, object> root)
+        {
+            return root.TableChildren().WhereMeta("data")
+                .TableChildren().WhereMeta("others")
+                .TableChildren().Where(i => EnvironmentKeys.Contains(i["key"]))
+                .Entry<string>("value");
+        }
+
+        private static IEnumerable<string> ProcessDialogIndex(FileEntry fe, PackageFileEntry pfe, Dictionary<string, object> root)
+        {
+            return root.TableChildren().WhereMeta("include").Entry<string>("name").Select(i => "gamedata/dialogs/" + i);
         }
     }
 }

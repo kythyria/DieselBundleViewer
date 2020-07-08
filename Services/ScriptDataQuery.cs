@@ -6,18 +6,15 @@ using DieselEngineFormats.ScriptData;
 
 namespace DieselBundleViewer.Services
 {
-   class ScriptDataQuery1
+    static class ScriptDataQuery
     {
         public static IEnumerable<T> Concat<T>(params IEnumerable<T>[] sequences)
         {
-            foreach(var seq in sequences)
-                foreach(var item in seq)
+            foreach (var seq in sequences)
+                foreach (var item in seq)
                     yield return item;
         }
-    }
 
-    static class ScriptDataQuery
-    {
         public static IEnumerable<T> Entry<T>(this Dictionary<string,object> self, string key)
         {
             if (self.TryGetValue(key, out object ovalue))
@@ -47,6 +44,8 @@ namespace DieselBundleViewer.Services
 
         public static IEnumerable<Dictionary<string, object>> TableChildren(this IEnumerable<Dictionary<string, object>> self)
             => self.Children<Dictionary<string, object>>();
+        public static IEnumerable<Dictionary<string, object>> TableChildren(this Dictionary<string, object> self)
+            => self.Values.OfType<Dictionary<string, object>>();
 
         public static IEnumerable<Dictionary<string, object>> WhereMeta(this IEnumerable<Dictionary<string, object>> self, string meta)
             => self.Where(i => i.ContainsKey("_meta") && (i["_meta"] as string) == meta);
