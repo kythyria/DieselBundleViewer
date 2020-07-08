@@ -80,6 +80,7 @@ namespace DieselBundleViewer.ViewModels
         public DelegateCommand<string> SetViewStyle { get; }
         public DelegateCommand OpenHowToUse { get; }
         public DelegateCommand ExtractAll { get; }
+        public DelegateCommand GenerateHashlist { get; }
 
         private Point DragStartLocation;
 
@@ -121,6 +122,7 @@ namespace DieselBundleViewer.ViewModels
             OpenSettingsDialog = new DelegateCommand(() => Utils.ShowDialog("SettingsDialog", r => UpdateSettings()));
             OpenHowToUse = new DelegateCommand(() => Utils.OpenURL("https://github.com/Luffyyy/DieselBundleViewer/wiki/How-to-Use"));
             ExtractAll = new DelegateCommand(ExtractAllExec, () => Root != null);
+            GenerateHashlist = new DelegateCommand(GenerateHashlistExec, () => Root != null);
 
             Utils.OnMouseMoved += OnMouseMoved;
 
@@ -342,6 +344,7 @@ namespace DieselBundleViewer.ViewModels
                 GC.Collect();
                 OpenFindDialog.RaiseCanExecuteChanged();
                 ExtractAll.RaiseCanExecuteChanged();
+                GenerateHashlist.RaiseCanExecuteChanged();
                 CloseBLB.RaiseCanExecuteChanged();
                 OpenBundleSelectorDialog.RaiseCanExecuteChanged();
             }
@@ -455,6 +458,7 @@ namespace DieselBundleViewer.ViewModels
 
             OpenFindDialog.RaiseCanExecuteChanged();
             ExtractAll.RaiseCanExecuteChanged();
+            GenerateHashlist.RaiseCanExecuteChanged();
             OpenBundleSelectorDialog.RaiseCanExecuteChanged();
             CloseBLB.RaiseCanExecuteChanged();
 
@@ -534,6 +538,51 @@ namespace DieselBundleViewer.ViewModels
             var next = CurrentPage.Previous;
             if (next != null)
                 SetDir(next);
+        }
+
+        public void GenerateHashlistExec()
+        {
+            var sad = new SaveFileDialog();
+            if(sad.ShowDialog() != true) { return; }
+
+            var path = sad.FileName;
+
+            var progress = new Progress<HashlistExtractor.ProgressRecord>();
+            var ct = new CancellationTokenSource();
+
+            var pms = new DialogParameters();
+            pms.Add("Canceller", ct);
+            pms.Add("ProgressAction", new Action<ProgressDialogViewModel>(dialog =>
+            {
+                progress.ProgressChanged += (o, pr) =>
+                {
+                    dialog.SetProgress(pr.Status, pr.Completed, pr.Total);
+                };
+
+                var task = Task.Run(async () => {
+                    await Task.Delay(100);
+                    try
+                    {
+                        var result = await new HashlistExtractor().Extract(FileEntries.Values, progress, ct.Token);
+                        using var tw = new StreamWriter(path, false, new System.Text.UTF8Encoding());
+                        ((IProgress<HashlistExtractor.ProgressRecord>)progress).Report(new HashlistExtractor.ProgressRecord("Saving", 0, 0));
+                        foreach (var i in result)
+                        {
+                            tw.WriteLine(i);
+                        }
+                        tw.Flush();
+                    }
+                    catch(Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                    Application.Current.Dispatcher.Invoke(() => {
+                        dialog.CloseDialog.Execute("True");
+                    });
+                    ct.Dispose();
+                });
+            }));
+            Utils.ShowDialog("ProgressDialog", pms);
         }
 
         public void RenderNewItems()

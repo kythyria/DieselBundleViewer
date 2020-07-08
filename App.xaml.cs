@@ -15,6 +15,7 @@ using AdonisUI;
 using WwiseSoundLib;
 using Orangelynx.Multimedia;
 using System.Windows.Threading;
+using System.Linq;
 
 namespace DieselBundleViewer
 {

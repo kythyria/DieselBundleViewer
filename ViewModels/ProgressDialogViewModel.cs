@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using DieselBundleViewer.Views;
+using Prism.Commands;
 using Prism.Events;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
@@ -22,8 +23,18 @@ namespace DieselBundleViewer.ViewModels
         private string progressText;
         public string ProgressText { get => progressText; set => SetProperty(ref progressText, value); }
 
+        private CancellationTokenSource canceller;
+        public CancellationTokenSource Canceller { get => canceller; set => SetProperty(ref canceller, value); }
+
+        public DelegateCommand<string> CancelClicked { get;  }
+
         List<double> LastSecs { get; set; }
         Stopwatch TimerFinish { get; set; }
+
+        public ProgressDialogViewModel()
+        {
+            CancelClicked = new DelegateCommand<string>(CancelClickedExec);
+        }
 
         protected override void PostDialogOpened(IDialogParameters pms)
         {
@@ -31,8 +42,21 @@ namespace DieselBundleViewer.ViewModels
             LastSecs = new List<double>();
 
             TimerFinish.Start();
+            Canceller = pms.GetValue<CancellationTokenSource>("Canceller");
             var startProgress = pms.GetValue<Action<ProgressDialogViewModel>>("ProgressAction");
             startProgress(this);
+        }
+
+        protected void CancelClickedExec(string s)
+        {
+            if(canceller != null)
+            {
+                canceller.Cancel();
+            }
+            else
+            {
+                CloseDialog.Execute(s);
+            }
         }
 
         public void SetProgress(string status, int current, float total)

@@ -67,6 +67,7 @@
                     <MenuItem Header="Find (Ctrl+F)" Command="{Binding OpenFindDialog}"/>
                     <MenuItem Header="Select Bundles (Ctrl+B)" Command="{Binding OpenBundleSelectorDialog}"/>
                     <MenuItem Header="Extract All" Command="{Binding ExtractAll}"/>
+                    <MenuItem Header="Generate Hashlist" Command="{Binding GenerateHashlist}"/>
                 </MenuItem>
                 <MenuItem Header="Help">
                     <MenuItem Header="About" Command="{Binding OpenAboutDialog}"/>
