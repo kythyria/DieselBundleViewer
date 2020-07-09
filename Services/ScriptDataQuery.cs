@@ -52,5 +52,16 @@ namespace DieselBundleViewer.Services
 
         public static IEnumerable<Dictionary<string, object>> WhereMeta(this IEnumerable<object> self, string meta)
             => self.OfType< Dictionary<string, object>>().Where(i => i.ContainsKey("_meta") && (i["_meta"] as string) == meta);
+
+        public static IEnumerable<T> AndSelect<T>(this IEnumerable<T> self, Func<T,T> expander)
+        {
+            foreach(var i in self)
+            {
+                yield return i;
+                var additional = expander(i);
+                if (additional != null)
+                    yield return additional;
+            }
+        }
     }
 }

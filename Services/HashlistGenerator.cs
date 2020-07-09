@@ -140,6 +140,7 @@ namespace DieselBundleViewer.Services
             return HashlistGenerator.DoExtract(files, progress, ct);
         }
 
+        delegate IEnumerable<string> Processor<T>(FileEntry fe, PackageFileEntry pfe, T data);
         delegate IEnumerable<string> ByteProcessor(FileEntry fe, PackageFileEntry pfe, byte[] data);
         delegate IEnumerable<string> ScriptDataProcessor(FileEntry fe, PackageFileEntry pfe, Dictionary<string, object> data);
 
@@ -153,6 +154,16 @@ namespace DieselBundleViewer.Services
                 var xd = new XPathDocument(ms);
                 var nodes = xd.CreateNavigator().Select(expr);
                 return nodes.Cast<XPathNavigator>().Select(i => i.Value);
+            };
+        }
+
+        private static ByteProcessor XmlProcessor(Processor<XPathNavigator> proc)
+        {
+            return delegate (FileEntry fe, PackageFileEntry pfe, byte[] data)
+            {
+                using var ms = new MemoryStream(data);
+                var xd = new XPathDocument(ms);
+                return proc(fe, pfe, xd.CreateNavigator());
             };
         }
 
@@ -170,6 +181,7 @@ namespace DieselBundleViewer.Services
         }
 
         private static Dictionary<string, ByteProcessor> FileProcessors = new Dictionary<string, ByteProcessor> {
+            //{ "unit", XmlProcessor(ProcessUnit) },
             { "unit", ProcessXpath(
                 "/unit/anim_state_machine/@name | /unit/object/@file | /unit/network/@remote_unit",
                 "/unit/extensions/extension[@class='CopDamage']/var[@name='_head_gear']/@value",
@@ -193,11 +205,27 @@ namespace DieselBundleViewer.Services
             { "dialog_index", ProcessScriptData(ProcessDialogIndex) }
         };
 
+        static readonly XPathExpression UnitFinder = XPathExpression.Compile(
+            "/unit/anim_state_machine/@name | /unit/network/@remote_unit"
+            + "| /unit/extensions/extension[@class='CopDamage']/var[@name='_head_gear']/@value"
+            + "| /unit/extensions/extension[@class='CopDamage']/var[@name='_head_gear_object']/@value"
+            + "| /unit/extensions/extension[@class='CopDamage']/var[@name='_head_gear_decal_mesh']/@value"
+            + "| /unit/dependencies/depends_on/attribute::*");
+        static readonly XPathExpression UnitObjectFinder = XPathExpression.Compile("/unit/object/@file");
+        private static IEnumerable<string> ProcessUnit(FileEntry fe, PackageFileEntry pfe, XPathNavigator data)
+        {
+            var names = data.Select(UnitFinder).Cast<XPathNavigator>().Select(i => i.Value);
+            var objectPath = data.Select(UnitObjectFinder).Cast<XPathNavigator>()
+                .Select(i => i.Value)
+                // TODO: Rearrange everything until these are only generated if they truly exist.
+                ;//.AndSelect(i => i.Contains("wpn_fps") ? i + "_npc" : null);
+            return Enumerable.Concat(names, objectPath);
+        }
+
         static readonly ImmutableArray<string> InstanceFilenames = ImmutableArray.CreateRange(new string[] {
             "world", "world/world", "continents", "world_cameras", "world_sounds",
             "cover_data", "massunit", "mission", "nav_manager_data"
         });
-
         private static IEnumerable<string> ProcessContinent(FileEntry fe, PackageFileEntry pfe, Dictionary<string, object> root)
         {
             var instanceNames = root.EntryTable("instances").TableChildren()
