@@ -68,6 +68,7 @@
                     <MenuItem Header="Select Bundles (Ctrl+B)" Command="{Binding OpenBundleSelectorDialog}"/>
                     <MenuItem Header="Extract All" Command="{Binding ExtractAll}"/>
                     <MenuItem Header="Generate Hashlist" Command="{Binding GenerateHashlist}"/>
+                    <MenuItem Header="Brute Force Stream Names" Command="{Binding BruteForceStreams}"/>
                 </MenuItem>
                 <MenuItem Header="Help">
                     <MenuItem Header="About" Command="{Binding OpenAboutDialog}"/>

@@ -81,6 +81,7 @@ namespace DieselBundleViewer.ViewModels
         public DelegateCommand OpenHowToUse { get; }
         public DelegateCommand ExtractAll { get; }
         public DelegateCommand GenerateHashlist { get; }
+        public DelegateCommand BruteForceStreams { get; }
 
         private Point DragStartLocation;
 
@@ -123,6 +124,7 @@ namespace DieselBundleViewer.ViewModels
             OpenHowToUse = new DelegateCommand(() => Utils.OpenURL("https://github.com/Luffyyy/DieselBundleViewer/wiki/How-to-Use"));
             ExtractAll = new DelegateCommand(ExtractAllExec, () => Root != null);
             GenerateHashlist = new DelegateCommand(GenerateHashlistExec, () => Root != null);
+            BruteForceStreams = new DelegateCommand(BruteForceStreamsExec, () => Root != null);
 
             Utils.OnMouseMoved += OnMouseMoved;
 
@@ -345,6 +347,7 @@ namespace DieselBundleViewer.ViewModels
                 OpenFindDialog.RaiseCanExecuteChanged();
                 ExtractAll.RaiseCanExecuteChanged();
                 GenerateHashlist.RaiseCanExecuteChanged();
+                BruteForceStreams.RaiseCanExecuteChanged();
                 CloseBLB.RaiseCanExecuteChanged();
                 OpenBundleSelectorDialog.RaiseCanExecuteChanged();
             }
@@ -459,6 +462,7 @@ namespace DieselBundleViewer.ViewModels
             OpenFindDialog.RaiseCanExecuteChanged();
             ExtractAll.RaiseCanExecuteChanged();
             GenerateHashlist.RaiseCanExecuteChanged();
+            BruteForceStreams.RaiseCanExecuteChanged();
             OpenBundleSelectorDialog.RaiseCanExecuteChanged();
             CloseBLB.RaiseCanExecuteChanged();
 
@@ -559,6 +563,16 @@ namespace DieselBundleViewer.ViewModels
                 }
                 tw.Flush();
             });
+        }
+
+        public void BruteForceStreamsExec()
+        {
+            var sad = new SaveFileDialog();
+            if (sad.ShowDialog() != true) { return; }
+
+            var path = sad.FileName;
+
+            ProgressDialogViewModel.RunOperation((progress, ct) => StreamNameBruteForcer.Run(FileEntries, path, progress, ct));
         }
 
         public void RenderNewItems()
