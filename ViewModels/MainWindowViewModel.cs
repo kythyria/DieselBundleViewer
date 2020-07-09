@@ -547,42 +547,18 @@ namespace DieselBundleViewer.ViewModels
 
             var path = sad.FileName;
 
-            var progress = new Progress<HashlistGenerator.ProgressRecord>();
-            var ct = new CancellationTokenSource();
-
-            var pms = new DialogParameters();
-            pms.Add("Canceller", ct);
-            pms.Add("ProgressAction", new Action<ProgressDialogViewModel>(dialog =>
+            ProgressDialogViewModel.RunOperation( async (progress, ct) =>
             {
-                progress.ProgressChanged += (o, pr) =>
+                var result = await new HashlistGenerator().Extract(FileEntries.Values, progress, ct);
+                if(ct.IsCancellationRequested) { return; }
+                using var tw = new StreamWriter(path, false, new UTF8Encoding());
+                progress.Report(new ProgressRecord("Saving", 0, 0));
+                foreach (var i in result)
                 {
-                    dialog.SetProgress(pr.Status, pr.Completed, pr.Total);
-                };
-
-                var task = Task.Run(async () => {
-                    await Task.Delay(100);
-                    try
-                    {
-                        var result = await new HashlistGenerator().Extract(FileEntries.Values, progress, ct.Token);
-                        using var tw = new StreamWriter(path, false, new System.Text.UTF8Encoding());
-                        ((IProgress<HashlistGenerator.ProgressRecord>)progress).Report(new HashlistGenerator.ProgressRecord("Saving", 0, 0));
-                        foreach (var i in result)
-                        {
-                            tw.WriteLine(i);
-                        }
-                        tw.Flush();
-                    }
-                    catch(Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                    Application.Current.Dispatcher.Invoke(() => {
-                        dialog.CloseDialog.Execute("True");
-                    });
-                    ct.Dispose();
-                });
-            }));
-            Utils.ShowDialog("ProgressDialog", pms);
+                    tw.WriteLine(i);
+                }
+                tw.Flush();
+            });
         }
 
         public void RenderNewItems()

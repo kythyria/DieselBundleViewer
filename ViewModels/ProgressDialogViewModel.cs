@@ -1,4 +1,5 @@
-﻿using DieselBundleViewer.Views;
+﻿using DieselBundleViewer.Services;
+using DieselBundleViewer.Views;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Mvvm;
@@ -13,6 +14,20 @@ using System.Windows;
 
 namespace DieselBundleViewer.ViewModels
 {
+    public class ProgressRecord
+    {
+        public string Status { get; private set; }
+        public int Total { get; private set; }
+        public int Completed { get; private set; }
+
+        public ProgressRecord(string status, int total, int completed)
+        {
+            Status = status;
+            Total = total;
+            Completed = completed;
+        }
+    }
+
     public class ProgressDialogViewModel : DialogBase
     {
         private float progress;
@@ -94,6 +109,44 @@ namespace DieselBundleViewer.ViewModels
                 });
                 TimerFinish.Stop();
             }
+        }
+
+        public static void RunOperation(Func<IProgress<ProgressRecord>, CancellationToken, Task> operation)
+        {
+            var progress = new Progress<ProgressRecord>();
+            var ct = new CancellationTokenSource();
+
+            var pms = new DialogParameters();
+            pms.Add("Canceller", ct);
+            pms.Add("ProgressAction", new Action<ProgressDialogViewModel>(dialog =>
+            {
+                progress.ProgressChanged += (o, pr) =>
+                {
+                    dialog.SetProgress(pr.Status, pr.Completed, pr.Total);
+                };
+
+                var task = Task.Run(async () =>
+                {
+                    await Task.Delay(100);
+                    try
+                    {
+                        await operation(progress, ct.Token);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            MessageBox.Show(e.ToString(), "Operation failed");
+                        });
+                    }
+                    Application.Current.Dispatcher.Invoke(() => {
+                        dialog.CloseDialog.Execute("True");
+                    });
+                    ct.Dispose();
+                });
+            }));
+            Utils.ShowDialog("ProgressDialog", pms);
         }
     }
 }

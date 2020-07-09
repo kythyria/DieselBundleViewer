@@ -11,23 +11,12 @@ using DieselBundleViewer.Models;
 using DieselEngineFormats.Bundle;
 using DieselEngineFormats.ScriptData;
 
+using ProgressRecord = DieselBundleViewer.ViewModels.ProgressRecord;
+
 namespace DieselBundleViewer.Services
 {
     class HashlistGenerator
     {
-        public class ProgressRecord
-        {
-            public string Status { get; private set; }
-            public int Total { get; private set; }
-            public int Completed { get; private set; }
-
-            public ProgressRecord(string status, int total, int completed)
-            {
-                Status = status;
-                Total = total;
-                Completed = completed;
-            }
-        }
 
         public class ExtractionResultRecord
         {
