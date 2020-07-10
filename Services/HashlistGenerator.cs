@@ -190,6 +190,7 @@ namespace DieselBundleViewer.Services
             { "continent", ProcessScriptData(ProcessContinent) },
             { "sequence_manager", ProcessScriptData(ProcessSequenceManager) },
             { "world", ProcessScriptData(ProcessWorld) },
+            { "continents", ProcessScriptData(ProcessContinents) },
             { "environment", ProcessScriptData(ProcessEnvironment) },
             { "dialog_index", ProcessScriptData(ProcessDialogIndex) }
         };
@@ -244,11 +245,32 @@ namespace DieselBundleViewer.Services
 
         private static IEnumerable<string> ProcessWorld(FileEntry fe, PackageFileEntry pfe, Dictionary<string, object> root)
         {
+            IEnumerable<string> subordinateFiles = null;
+            if(fe.PathIds.HasUnHashed)
+            {
+                subordinateFiles = ScriptDataQuery.Concat(
+                    root.EntryTable("ai_nav_graphs").Entry<string>("file"),
+                    root.EntryTable("brush").Entry<string>("file"),
+                    root.EntryTable("sounds").Entry<string>("file"),
+                    root.EntryTable("world_camera").Entry<string>("file"),
+                    root.EntryTable("world_data").Entry<string>("continents_file"),
+                    Enumerable.Repeat("cover_data", 1)
+                ).Select(i => fe.Parent.EntryPath + "/" + i);
+            }
+
             var env = root.EntryTable("environment");
             return ScriptDataQuery.Concat(
                 env.EntryTable("environment_areas").TableChildren().Entry<string>("environment"),
                 env.EntryTable("environment_values").Entry<string>("environment"),
-                env.EntryTable("effects").TableChildren().Entry<string>("name"));
+                env.EntryTable("effects").TableChildren().Entry<string>("name"),
+                subordinateFiles);
+        }
+
+        private static IEnumerable<string> ProcessContinents(FileEntry fe, PackageFileEntry pfe, Dictionary<string, object> root)
+        {
+            if (!fe.PathIds.HasUnHashed) { return Enumerable.Empty<string>(); }
+
+            return root.Keys.Select(i => string.Format("{0}/{1}/{1}", fe.Parent.EntryPath, i));
         }
 
         static readonly ImmutableArray<string> EnvironmentKeys = ImmutableArray.CreateRange(new string[] {

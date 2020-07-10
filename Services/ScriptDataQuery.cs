@@ -11,8 +11,9 @@ namespace DieselBundleViewer.Services
         public static IEnumerable<T> Concat<T>(params IEnumerable<T>[] sequences)
         {
             foreach (var seq in sequences)
-                foreach (var item in seq)
-                    yield return item;
+                if(seq != null)
+                    foreach (var item in seq)
+                        yield return item;
         }
 
         public static IEnumerable<T> Entry<T>(this Dictionary<string,object> self, string key)

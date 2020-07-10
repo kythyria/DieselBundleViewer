@@ -17,6 +17,8 @@ namespace DieselBundleViewer.Services
     {
         internal static async Task Run(Dictionary<uint, FileEntry> fileEntries, string outPath, IProgress<ProgressRecord> progress, CancellationToken ct)
         {
+            var s = new System.Diagnostics.Stopwatch();
+            s.Start();
             var pendingBankfile = File.ReadAllLinesAsync("Data/banknames", ct);
             var pendingStreamfile = File.ReadAllLinesAsync("Data/streamnames", ct);
 
@@ -59,6 +61,8 @@ namespace DieselBundleViewer.Services
             File.WriteAllLines(outPath, interestingPaths, new UTF8Encoding());
 
             completed = total;
+            s.Stop();
+            Console.WriteLine("Bruteforced {1} combinations in {0} ms", s.ElapsedMilliseconds, total * interestingBanks.Count);
         }
     }
 }
