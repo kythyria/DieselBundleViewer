@@ -82,6 +82,8 @@ namespace DieselBundleViewer.ViewModels
         public DelegateCommand ExtractAll { get; }
         public DelegateCommand GenerateHashlist { get; }
         public DelegateCommand BruteForceStreams { get; }
+        public DelegateCommand BruteForceCubelights { get; }
+        public DelegateCommand AnalyseDuplication { get; }
 
         private Point DragStartLocation;
 
@@ -125,6 +127,8 @@ namespace DieselBundleViewer.ViewModels
             ExtractAll = new DelegateCommand(ExtractAllExec, () => Root != null);
             GenerateHashlist = new DelegateCommand(GenerateHashlistExec, () => Root != null);
             BruteForceStreams = new DelegateCommand(BruteForceStreamsExec, () => Root != null);
+            BruteForceCubelights = new DelegateCommand(BruteForceCubelightsExec, () => Root != null);
+            AnalyseDuplication = new DelegateCommand(AnalyseDuplicationExec, () => Root != null);
 
             Utils.OnMouseMoved += OnMouseMoved;
 
@@ -348,6 +352,8 @@ namespace DieselBundleViewer.ViewModels
                 ExtractAll.RaiseCanExecuteChanged();
                 GenerateHashlist.RaiseCanExecuteChanged();
                 BruteForceStreams.RaiseCanExecuteChanged();
+                BruteForceCubelights.RaiseCanExecuteChanged();
+                AnalyseDuplication.RaiseCanExecuteChanged();
                 CloseBLB.RaiseCanExecuteChanged();
                 OpenBundleSelectorDialog.RaiseCanExecuteChanged();
             }
@@ -463,6 +469,8 @@ namespace DieselBundleViewer.ViewModels
             ExtractAll.RaiseCanExecuteChanged();
             GenerateHashlist.RaiseCanExecuteChanged();
             BruteForceStreams.RaiseCanExecuteChanged();
+            BruteForceCubelights.RaiseCanExecuteChanged();
+            AnalyseDuplication.RaiseCanExecuteChanged();
             OpenBundleSelectorDialog.RaiseCanExecuteChanged();
             CloseBLB.RaiseCanExecuteChanged();
 
@@ -572,7 +580,27 @@ namespace DieselBundleViewer.ViewModels
 
             var path = sad.FileName;
 
-            ProgressDialogViewModel.RunOperation((progress, ct) => StreamNameBruteForcer.Run(FileEntries, path, progress, ct));
+            ProgressDialogViewModel.RunOperation((progress, ct) => BruteForcer.SearchForStreams(FileEntries, path, progress, ct));
+        }
+
+        public void BruteForceCubelightsExec()
+        {
+            var sad = new SaveFileDialog();
+            if (sad.ShowDialog() != true) { return; }
+
+            var path = sad.FileName;
+
+            ProgressDialogViewModel.RunOperation((progress, ct) => BruteForcer.SearchForCubelights(FileEntries, path, progress, ct));
+        }
+
+        public void AnalyseDuplicationExec()
+        {
+            var sad = new SaveFileDialog();
+            if (sad.ShowDialog() != true) { return; }
+
+            var path = sad.FileName;
+
+            ProgressDialogViewModel.RunOperation((p, ct) => DataChecker.Analyse(FileEntries.Values, path, p, ct));
         }
 
         public void RenderNewItems()
