@@ -155,5 +155,38 @@ namespace DieselBundleViewer.Services
             else
                 return false;
         }
-}
+
+        public static IEnumerable<T[]> CartesianProduct<T>(this IEnumerable<IEnumerable<T>> sets)
+        {
+            var acc = new List<T[]>() { new T[0] };
+            foreach (var set in sets)
+            {
+                var newacc = new List<T[]>();
+                foreach(var item in set)
+                {
+                    foreach(var existing in acc)
+                    {
+                        newacc.Add(existing.Append(item).ToArray());
+                    }
+                }
+                acc = newacc;
+            }
+            return acc;
+        }
+
+        public static IEnumerable<T[]> CartesianProduct2<T>(this IEnumerable<IEnumerable<T>> sets)
+        {
+            var acc = new List<T[]>() { new T[0] };
+            foreach (var set in sets)
+            {
+                var newacc = new List<T[]>(acc.Count * set.Count());
+                foreach (var item in set)
+                {
+                    newacc.AddRange(acc.Select(existing => existing.Append(item).ToArray()));
+                }
+                acc = newacc;
+            }
+            return acc;
+        }
+    }
 }

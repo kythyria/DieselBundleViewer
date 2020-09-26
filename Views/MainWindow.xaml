@@ -71,6 +71,7 @@
                     <MenuItem Header="Brute Force Stream Names" Command="{Binding BruteForceStreams}"/>
                     <MenuItem Header="Brute Force Cubelight Names" Command="{Binding BruteForceCubelights}"/>
                     <MenuItem Header="Analyse Duplication" Command="{Binding AnalyseDuplication}"/>
+                    <MenuItem Header="Brute force copy names" Command="{Binding BruteForceCopies}"/>
                 </MenuItem>
                 <MenuItem Header="Help">
                     <MenuItem Header="About" Command="{Binding OpenAboutDialog}"/>

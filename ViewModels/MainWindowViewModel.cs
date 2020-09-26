@@ -83,6 +83,7 @@ namespace DieselBundleViewer.ViewModels
         public DelegateCommand GenerateHashlist { get; }
         public DelegateCommand BruteForceStreams { get; }
         public DelegateCommand BruteForceCubelights { get; }
+        public DelegateCommand BruteForceCopies { get; }
         public DelegateCommand AnalyseDuplication { get; }
 
         private Point DragStartLocation;
@@ -128,6 +129,7 @@ namespace DieselBundleViewer.ViewModels
             GenerateHashlist = new DelegateCommand(GenerateHashlistExec, () => Root != null);
             BruteForceStreams = new DelegateCommand(BruteForceStreamsExec, () => Root != null);
             BruteForceCubelights = new DelegateCommand(BruteForceCubelightsExec, () => Root != null);
+            BruteForceCopies = new DelegateCommand(BruteForceCopiesExec, () => Root != null);
             AnalyseDuplication = new DelegateCommand(AnalyseDuplicationExec, () => Root != null);
 
             Utils.OnMouseMoved += OnMouseMoved;
@@ -353,6 +355,7 @@ namespace DieselBundleViewer.ViewModels
                 GenerateHashlist.RaiseCanExecuteChanged();
                 BruteForceStreams.RaiseCanExecuteChanged();
                 BruteForceCubelights.RaiseCanExecuteChanged();
+                BruteForceCopies.RaiseCanExecuteChanged();
                 AnalyseDuplication.RaiseCanExecuteChanged();
                 CloseBLB.RaiseCanExecuteChanged();
                 OpenBundleSelectorDialog.RaiseCanExecuteChanged();
@@ -470,6 +473,7 @@ namespace DieselBundleViewer.ViewModels
             GenerateHashlist.RaiseCanExecuteChanged();
             BruteForceStreams.RaiseCanExecuteChanged();
             BruteForceCubelights.RaiseCanExecuteChanged();
+            BruteForceCopies.RaiseCanExecuteChanged();
             AnalyseDuplication.RaiseCanExecuteChanged();
             OpenBundleSelectorDialog.RaiseCanExecuteChanged();
             CloseBLB.RaiseCanExecuteChanged();
@@ -591,6 +595,16 @@ namespace DieselBundleViewer.ViewModels
             var path = sad.FileName;
 
             ProgressDialogViewModel.RunOperation((progress, ct) => BruteForcer.SearchForCubelights(FileEntries, path, progress, ct));
+        }
+
+        public void BruteForceCopiesExec()
+        {
+            var sad = new SaveFileDialog();
+            if (sad.ShowDialog() != true) { return; }
+
+            var path = sad.FileName;
+
+            ProgressDialogViewModel.RunOperation((progress, ct) => BruteForcer.SearchForSuffixed(FileEntries, path, progress, ct));
         }
 
         public void AnalyseDuplicationExec()
