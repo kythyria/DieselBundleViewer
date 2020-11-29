@@ -484,7 +484,7 @@ namespace DieselBundleViewer.ViewModels
             OpenBundleSelectorDialog.RaiseCanExecuteChanged();
             CloseBLB.RaiseCanExecuteChanged();
 
-            Status = $"Done. Took {timer.ElapsedMilliseconds / 1000} seconds";
+            Status = $"Done. Took {timer.ElapsedMilliseconds / 1000.0} seconds";
 
             Bundles = PackageHeaders.Keys.ToList();
             FoldersToRender.Clear();

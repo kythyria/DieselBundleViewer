@@ -139,8 +139,9 @@ namespace DieselBundleViewer.Services
             var expr = XPathExpression.Compile(strexpr);
             return delegate (FileEntry fe, PackageFileEntry pfe, byte[] data)
             {
-                using var ms = new MemoryStream(data);
-                var xd = new XPathDocument(ms);
+                var datastring = System.Text.Encoding.UTF8.GetString(data);
+                using var tidiedstring = new StringReader(XmlTidier.TidyString(datastring));
+                var xd = new XPathDocument(tidiedstring);
                 var nodes = xd.CreateNavigator().Select(expr);
                 return nodes.Cast<XPathNavigator>().Select(i => i.Value);
             };
